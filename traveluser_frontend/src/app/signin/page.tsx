@@ -1,23 +1,32 @@
 "use client";
-
-import { useState } from "react";
+import Cookies from "js-cookie";
 import Link from "next/link";
-import Navbar from "../components/navbar";
+import { useEffect, useState } from "react";
 import Footer from "../components/footer";
-
+import Navbar from "../components/navbar";
 const SignIn = () => {
-  // State to manage form data
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
-
-  // State for error and success messages
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Handle input change
+  useEffect(() => {
+    // Retrieve data from cookies if rememberMe is true
+    const storedEmail = Cookies.get("email");
+    const storedRememberMe = Cookies.get("rememberMe");
+
+    if (storedRememberMe === "true") {
+      setFormData({
+        ...formData,
+        email: storedEmail || "",
+        rememberMe: true,
+      });
+    }
+  }, []);
+
   const handleInputChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevState) => ({
@@ -26,49 +35,55 @@ const SignIn = () => {
     }));
   };
 
-  // Form submit handler
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-
-    // Reset error messages
     setError("");
     setSuccessMessage("");
 
-    // Simple validation for email and password
     if (!formData.email || !formData.password) {
       setError("Please fill in both email and password.");
       return;
     }
 
-    // Simulate an API call to authenticate the user (replace with real API call)
     try {
-      const res: any = await mockSignInApi(formData.email, formData.password);
+      const response = await fetch("http://localhost:5000/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-      if (res.success) {
+      const data = await response.json();
+
+      if (response.ok) {
         setSuccessMessage("Successfully signed in!");
-        // Redirect to dashboard or home page
+
+        // Save to cookies if rememberMe is true
+        if (formData.rememberMe && data?.access_token && data.user) {
+          Cookies.set("access_token", data?.access_token, { expires: 7 }); // Store for 7 days
+          Cookies.set("user", JSON.stringify(data.user), { expires: 7 }); // Store user object as JSON string for 7 days
+          Cookies.set("rememberMe", "true", { expires: 7 });
+          console.log(Cookies.get("user"));
+        } else {
+          // Clear cookies if rememberMe is false
+          Cookies.remove("access_token");
+          Cookies.remove("user");
+          Cookies.remove("rememberMe");
+        }
+
         setTimeout(() => {
-          window.location.href = "/dashboard"; // Adjust the path as needed
+          window.location.href = `/profile/${data.user.name}`;
         }, 2000);
       } else {
-        setError(res.message);
+        setError(data.message || "Invalid email or password");
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");
     }
-  };
-
-  // Mock API function to simulate sign-in
-  const mockSignInApi = (email: any, password: any) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email === "test@example.com" && password === "password123") {
-          resolve({ success: true });
-        } else {
-          reject({ success: false, message: "Invalid email or password" });
-        }
-      }, 1000); // Simulating API delay
-    });
   };
 
   return (
@@ -131,7 +146,7 @@ const SignIn = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F45B69]"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F45B69] text-black"
                   placeholder="Enter your work email"
                   required
                 />
@@ -146,7 +161,7 @@ const SignIn = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F45B69]"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F45B69] text-black"
                   placeholder="Enter your password"
                   required
                 />
@@ -171,11 +186,19 @@ const SignIn = () => {
               </button>
             </form>
 
-            <div className="mt-4 text-center text-white">
-              <span>Don't have an account? </span>
-              <Link href="/signup" className="text-[#F45B69] hover:underline">
-                Create one
+            <div className="mt-4 flex justify-between">
+              <Link
+                href="/forgot-password"
+                className="text-[#F45B69] hover:underline text-sm"
+              >
+                Forgot Password?
               </Link>
+              <div className="flex items-center">
+                <span className="text-white">Don't have an account? </span>
+                <Link href="/signup" className="text-[#F45B69] hover:underline">
+                  Create one
+                </Link>
+              </div>
             </div>
           </div>
         </div>

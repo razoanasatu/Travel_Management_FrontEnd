@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
-
+import Navbar from "@/app/components/navbar";
+import Cookies from "js-cookie";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 const Profile = () => {
   // State to manage form data
   const [formData, setFormData] = useState({
@@ -12,12 +12,34 @@ const Profile = () => {
     email: "",
     password: "",
     dob: "",
-    country: "",
+    address: "",
   });
 
   // State for error and success messages
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Populate form data from cookies on component mount
+  useEffect(() => {
+    if (!Cookies.get("user")) {
+      window.location.href = "/signin";
+    }
+    // Retrieve user data from cookies
+    const storedUser = Cookies.get("user");
+
+    if (storedUser) {
+      // Parse the user data and update the formData state
+      const user = JSON.parse(storedUser);
+
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        password: "", // You can leave the password field empty or handle it differently
+        dob: user.dob || "",
+        address: user.address || "",
+      });
+    }
+  }, []);
 
   // Handle input change
   const handleInputChange = (e: any) => {
@@ -39,18 +61,24 @@ const Profile = () => {
     // Simple validation for required fields
     if (
       !formData.name ||
-      !formData.email ||
       !formData.password ||
       !formData.dob ||
-      !formData.country
+      !formData.address
     ) {
       setError("Please fill in all fields.");
       return;
     }
 
-    // Simulate an API call to update the user information (replace with real API call)
+    // Prepare data to be sent to the backend (exclude email from update)
+    const updateData = {
+      name: formData.name,
+      password: formData.password,
+      dob: formData.dob,
+      address: formData.address,
+    };
+
     try {
-      const res: any = await mockUpdateApi(formData);
+      const res: any = await updateApi(updateData);
 
       if (res.success) {
         setSuccessMessage("Successfully updated!");
@@ -66,22 +94,27 @@ const Profile = () => {
     }
   };
 
-  // Mock API function to simulate update
-  const mockUpdateApi = (formData: any) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Mock success or failure response
-        if (
-          formData.email === "test@example.com" &&
-          formData.password === "password123"
-        ) {
-          resolve({ success: true });
-        } else {
-          reject({ success: false, message: "Invalid email or password" });
-        }
-      }, 1000); // Simulating API delay
-    });
+  const token = Cookies.get("access_token");
+  // API function to simulate the real API call
+  const updateApi = (formData: any) => {
+    return fetch("http://localhost:5000/user/update-profile", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Add Bearer token to Authorization header
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => response.json())
+      .then((data) => data)
+      .catch((error) => {
+        throw new Error("Network error");
+      });
   };
+
+  useEffect(() => {
+    console.log(formData);
+  }, [formData]);
 
   return (
     <>
@@ -123,10 +156,12 @@ const Profile = () => {
           </div>
 
           {/* Name Section */}
-          <h2 className="text-xl font-semibold text-gray-800">John Doe</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            {formData.name}
+          </h2>
 
           {/* Email Section */}
-          <p className="text-sm text-gray-600 mb-6">john.doe@example.com</p>
+          <p className="text-sm text-gray-600 mb-6">{formData.email}</p>
 
           {/* Account Section */}
           <div className="w-full mb-6">
@@ -149,7 +184,14 @@ const Profile = () => {
                 Change Password
               </li>
               <li className="py-2 cursor-pointer hover:text-gray-800">
-                Log Out
+                <button
+                  onClick={() => {
+                    Cookies.remove("user");
+                    window.location.href = "/";
+                  }}
+                >
+                  Log out
+                </button>
               </li>
             </ul>
           </div>
@@ -184,7 +226,7 @@ const Profile = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300"
+                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300 text-black"
                   placeholder="Enter your name"
                   required
                 />
@@ -199,7 +241,7 @@ const Profile = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300"
+                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300 text-black"
                   placeholder="Enter your email"
                   required
                 />
@@ -214,7 +256,7 @@ const Profile = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300"
+                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300 text-black"
                   placeholder="Enter your password"
                   required
                 />
@@ -229,29 +271,29 @@ const Profile = () => {
                   name="dob"
                   value={formData.dob}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300"
+                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300 text-black"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#59C3C3]">
-                  Country/Region *
+                  address/Region *
                 </label>
                 <input
                   type="text"
-                  name="country"
-                  value={formData.country}
+                  name="address"
+                  value={formData.address}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300"
-                  placeholder="Enter your country/region"
+                  className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F45B69] transition-all duration-300 text-black"
+                  placeholder="Enter your address/region"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-blue-800 text-white py-2 rounded-lg hover:bg-[#3d9b9b] transition-all duration-300"
+                className="w-full bg-blue-800 text-white py-2 rounded-lg hover:bg-[#3d9b9b] transition-all duration-300 text-black"
               >
                 Save Changes
               </button>

@@ -1,42 +1,32 @@
-"use client";
+// "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  HiOutlineArrowNarrowLeft,
+  HiOutlineArrowNarrowRight,
+} from "react-icons/hi";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
-import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
-import { HiOutlineArrowNarrowRight } from "react-icons/hi";
-import Link from "next/link";
 
 export default function Booking() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [destinations, setDestinations] = useState<any>([]);
 
-  const destinations = [
-    {
-      title: "Paris",
-      country: "France",
-      visitors: 32000,
-      imageUrl: "/card_1.png",
-    },
-    {
-      title: "Tokyo",
-      country: "Japan",
-      visitors: 28000,
-      imageUrl: "/card_2.png",
-    },
-    {
-      title: "New York",
-      country: "USA",
-      visitors: 40000,
-      imageUrl: "/card_3.png",
-    },
-    {
-      title: "Sydney",
-      country: "Australia",
-      visitors: 25000,
-      imageUrl: "/card_4.png",
-    },
-    // Add more destinations as needed
-  ];
+  useEffect(() => {
+    // Fetch destinations data from backend API
+    const fetchDestinations = async () => {
+      try {
+        const response = await fetch("/api/destinations"); // Adjust the endpoint URL as needed
+        const data = await response.json();
+        setDestinations(data);
+      } catch (error) {
+        console.error("Error fetching destinations:", error);
+      }
+    };
+
+    fetchDestinations();
+  }, []); // The empty dependency array ensures this runs only once on mount
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % destinations.length);
@@ -47,6 +37,11 @@ export default function Booking() {
       prevIndex === 0 ? destinations.length - 1 : prevIndex - 1
     );
   };
+
+  if (!destinations.length) {
+    // Loading state if destinations are not yet loaded
+    return <div>Loading destinations...</div>;
+  }
 
   return (
     <>
@@ -108,7 +103,7 @@ export default function Booking() {
 
         {/* Destination Cards Section */}
         <div className="flex overflow-x-auto m-8 space-x-2 md:grid md:grid-cols-4 gap-0">
-          {destinations.map((destination, index) => (
+          {destinations.map((destination: any, index: any) => (
             <Link href={`/destination/${destination.title}`} key={index}>
               <div
                 className={`min-w-[250px] h-[300px] bg-cover bg-center rounded-xl cursor-pointer ${
