@@ -240,6 +240,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import baseUrl from "../../../constant";
 
 export default function SignUpHero() {
   const router = useRouter();
@@ -276,7 +277,7 @@ export default function SignUpHero() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/signup", {
+      const response = await fetch(`${baseUrl}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

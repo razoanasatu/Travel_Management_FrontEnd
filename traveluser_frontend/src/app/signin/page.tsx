@@ -2,6 +2,7 @@
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import baseUrl from "../../../constant";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
 const SignIn = () => {
@@ -46,7 +47,7 @@ const SignIn = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/signin", {
+      const response = await fetch(`${baseUrl}/auth/signin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

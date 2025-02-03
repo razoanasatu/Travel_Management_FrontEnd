@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import baseUrl from "../../../constant";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
 
@@ -27,7 +28,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/reset", {
+      const response = await fetch(`${baseUrl}/auth/reset`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

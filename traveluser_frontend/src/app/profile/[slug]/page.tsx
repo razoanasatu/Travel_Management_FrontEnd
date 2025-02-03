@@ -5,6 +5,7 @@ import Navbar from "@/app/components/navbar";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import baseUrl from "../../../../constant";
 const Profile = () => {
   // State to manage form data
   const [formData, setFormData] = useState({
@@ -97,7 +98,7 @@ const Profile = () => {
   const token = Cookies.get("access_token");
   // API function to simulate the real API call
   const updateApi = (formData: any) => {
-    return fetch("http://localhost:5000/user/update-profile", {
+    return fetch(`${baseUrl}/user/update-profile`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

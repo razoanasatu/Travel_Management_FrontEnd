@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -6,27 +6,40 @@ import {
   HiOutlineArrowNarrowLeft,
   HiOutlineArrowNarrowRight,
 } from "react-icons/hi";
+import baseUrl from "../../../constant";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
 
+// Define a type for the destination data
+interface Destination {
+  id: number;
+  name: string;
+  country: string;
+  description: string;
+  best_season: string;
+  imagePath: string;
+}
+
 export default function Booking() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [destinations, setDestinations] = useState<any>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  // Fetch destinations data from backend API
+  const fetchDestinations = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/destinations/all`); // Adjust the endpoint URL as needed
+      const data = await response.json();
+      setDestinations(data);
+    } catch (error) {
+      console.error("Error fetching destinations:", error);
+    }
+  };
 
   useEffect(() => {
-    // Fetch destinations data from backend API
-    const fetchDestinations = async () => {
-      try {
-        const response = await fetch("/api/destinations"); // Adjust the endpoint URL as needed
-        const data = await response.json();
-        setDestinations(data);
-      } catch (error) {
-        console.error("Error fetching destinations:", error);
-      }
-    };
-
     fetchDestinations();
   }, []); // The empty dependency array ensures this runs only once on mount
+  useEffect(() => {
+    console.log(destinations);
+  }, [destinations]); // The empty dependency array ensures this runs only once on mount
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % destinations.length);
@@ -37,11 +50,6 @@ export default function Booking() {
       prevIndex === 0 ? destinations.length - 1 : prevIndex - 1
     );
   };
-
-  if (!destinations.length) {
-    // Loading state if destinations are not yet loaded
-    return <div>Loading destinations...</div>;
-  }
 
   return (
     <>
@@ -80,9 +88,9 @@ export default function Booking() {
         </div>
 
         {/* Section Title with Navigation */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 mx-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 mx-8 text-black">
           <div>
-            <p className="text-lg font-bold">Where you want to go</p>
+            <div className="text-lg font-bold">Where you want to go</div>
             <h2 className="text-3xl font-bold">Popular Destinations</h2>
           </div>
           <div className="flex space-x-4 mt-4 md:mt-0">
@@ -102,25 +110,26 @@ export default function Booking() {
         </div>
 
         {/* Destination Cards Section */}
-        <div className="flex overflow-x-auto m-8 space-x-2 md:grid md:grid-cols-4 gap-0">
-          {destinations.map((destination: any, index: any) => (
-            <Link href={`/destination/${destination.title}`} key={index}>
-              <div
-                className={`min-w-[250px] h-[300px] bg-cover bg-center rounded-xl cursor-pointer ${
-                  index === currentIndex ? "opacity-50" : "opacity-100"
-                }`}
-                style={{ backgroundImage: `url(${destination.imageUrl})` }}
-              >
-                <div className="flex flex-col justify-end h-full p-4 rounded-xl">
-                  <h3 className="text-xl text-white">{destination.title}</h3>
-                  <p className="text-white">{destination.country}</p>
-                  <p className="text-white">
-                    {destination.visitors} people want to visit
-                  </p>
+        <div className="flex overflow-x-auto m-8 space-x-2 md:grid md:grid-cols-4 gap-4">
+          {destinations &&
+            destinations.map((destination, index) => (
+              <Link href={`/destination?name=${destination.name}`} key={index}>
+                <div
+                  className={`min-w-[250px] h-[300px] bg-cover bg-center rounded-xl cursor-pointer ${
+                    index === currentIndex ? "opacity-50" : "opacity-100"
+                  }`}
+                  style={{ backgroundImage: `url(${destination.imagePath})` }}
+                >
+                  <div className="flex flex-col justify-end h-full p-4 rounded-xl">
+                    <h3 className="text-xl text-white">{destination.name}</h3>
+                    <div className="text-white">{destination.country}</div>
+                    <div className="text-white">
+                      {destination.country} people want to visit
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
         </div>
       </div>
       <Footer />

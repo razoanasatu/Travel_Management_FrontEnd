@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import baseUrl from "../../../constant";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
 
@@ -16,7 +17,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/auth/forgot", {
+      const response = await fetch(`${baseUrl}/auth/forgot`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
